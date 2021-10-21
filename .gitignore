@@ -1,0 +1,5 @@
+build/
+lib/
+.vs/
+.vscode/settings.json
+.vscode/launch.json

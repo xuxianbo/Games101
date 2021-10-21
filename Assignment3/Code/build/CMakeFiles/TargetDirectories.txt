@@ -1,3 +1,0 @@
-E:/Games/101/HW/Assignment3/Code/build/CMakeFiles/Rasterizer.dir
-E:/Games/101/HW/Assignment3/Code/build/CMakeFiles/edit_cache.dir
-E:/Games/101/HW/Assignment3/Code/build/CMakeFiles/rebuild_cache.dir
