@@ -4,20 +4,33 @@
 
 #include <cstring>
 
-bool rayTriangleIntersect(const Vector3f& v0, const Vector3f& v1, const Vector3f& v2, const Vector3f& orig,
-                          const Vector3f& dir, float& tnear, float& u, float& v)
+bool rayTriangleIntersect(const Vector3f &v0, const Vector3f &v1, const Vector3f &v2, const Vector3f &orig,
+                          const Vector3f &dir, float &tnear, float &u, float &v)
 {
-    // TODO: Implement this function that tests whether the triangle
-    // that's specified bt v0, v1 and v2 intersects with the ray (whose
-    // origin is *orig* and direction is *dir*)
-    // Also don't forget to update tnear, u and v.
-    return false;
+    float t, b1, b2, k;
+    auto e1 = v1 - v0;
+    auto e2 = v2 - v0;
+    auto s = orig - v0;
+    auto s1 = crossProduct(dir, e2);
+    auto s2 = crossProduct(s, e1);
+    k = dotProduct(s1, e1);
+
+    t = dotProduct(s2, e2) / k;
+    b1 = dotProduct(s1, s) / k;
+    b2 = dotProduct(s2, dir) / k;
+
+    if (b1 < 0 || b2 < 0 || b1 + b2 > 1 || t < 0 || k == 0.0)
+        return false;
+    tnear = t;
+    u = b1;
+    v = b2;
+    return true;
 }
 
 class MeshTriangle : public Object
 {
 public:
-    MeshTriangle(const Vector3f* verts, const uint32_t* vertsIndex, const uint32_t& numTris, const Vector2f* st)
+    MeshTriangle(const Vector3f *verts, const uint32_t *vertsIndex, const uint32_t &numTris, const Vector2f *st)
     {
         uint32_t maxIndex = 0;
         for (uint32_t i = 0; i < numTris * 3; ++i)
@@ -33,15 +46,15 @@ public:
         memcpy(stCoordinates.get(), st, sizeof(Vector2f) * maxIndex);
     }
 
-    bool intersect(const Vector3f& orig, const Vector3f& dir, float& tnear, uint32_t& index,
-                   Vector2f& uv) const override
+    bool intersect(const Vector3f &orig, const Vector3f &dir, float &tnear, uint32_t &index,
+                   Vector2f &uv) const override
     {
         bool intersect = false;
         for (uint32_t k = 0; k < numTriangles; ++k)
         {
-            const Vector3f& v0 = vertices[vertexIndex[k * 3]];
-            const Vector3f& v1 = vertices[vertexIndex[k * 3 + 1]];
-            const Vector3f& v2 = vertices[vertexIndex[k * 3 + 2]];
+            const Vector3f &v0 = vertices[vertexIndex[k * 3]];
+            const Vector3f &v1 = vertices[vertexIndex[k * 3 + 1]];
+            const Vector3f &v2 = vertices[vertexIndex[k * 3 + 2]];
             float t, u, v;
             if (rayTriangleIntersect(v0, v1, v2, orig, dir, t, u, v) && t < tnear)
             {
@@ -56,22 +69,22 @@ public:
         return intersect;
     }
 
-    void getSurfaceProperties(const Vector3f&, const Vector3f&, const uint32_t& index, const Vector2f& uv, Vector3f& N,
-                              Vector2f& st) const override
+    void getSurfaceProperties(const Vector3f &, const Vector3f &, const uint32_t &index, const Vector2f &uv, Vector3f &N,
+                              Vector2f &st) const override
     {
-        const Vector3f& v0 = vertices[vertexIndex[index * 3]];
-        const Vector3f& v1 = vertices[vertexIndex[index * 3 + 1]];
-        const Vector3f& v2 = vertices[vertexIndex[index * 3 + 2]];
+        const Vector3f &v0 = vertices[vertexIndex[index * 3]];
+        const Vector3f &v1 = vertices[vertexIndex[index * 3 + 1]];
+        const Vector3f &v2 = vertices[vertexIndex[index * 3 + 2]];
         Vector3f e0 = normalize(v1 - v0);
         Vector3f e1 = normalize(v2 - v1);
         N = normalize(crossProduct(e0, e1));
-        const Vector2f& st0 = stCoordinates[vertexIndex[index * 3]];
-        const Vector2f& st1 = stCoordinates[vertexIndex[index * 3 + 1]];
-        const Vector2f& st2 = stCoordinates[vertexIndex[index * 3 + 2]];
+        const Vector2f &st0 = stCoordinates[vertexIndex[index * 3]];
+        const Vector2f &st1 = stCoordinates[vertexIndex[index * 3 + 1]];
+        const Vector2f &st2 = stCoordinates[vertexIndex[index * 3 + 2]];
         st = st0 * (1 - uv.x - uv.y) + st1 * uv.x + st2 * uv.y;
     }
 
-    Vector3f evalDiffuseColor(const Vector2f& st) const override
+    Vector3f evalDiffuseColor(const Vector2f &st) const override
     {
         float scale = 5;
         float pattern = (fmodf(st.x * scale, 1) > 0.5) ^ (fmodf(st.y * scale, 1) > 0.5);
